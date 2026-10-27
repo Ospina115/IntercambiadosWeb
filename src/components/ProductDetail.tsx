@@ -7,8 +7,13 @@ import { categories } from "@/data/categories";
 import ExchangeModal from "@/components/ExchangeModal";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import { getUsers } from "@/services/users";
+import { getProducts } from "@/services/products";
+import { createExchange, getExchanges } from "@/services/exchanges";
+import { usePersistentState } from "@/hooks/usePersistentState";
+import { storageKeys } from "@/lib/storageKeys";
+import type { Exchange } from "@/types/exchange";
 import type { Product } from "@/types/product";
-import type { User } from "@/types/user";
 
 const currency = new Intl.NumberFormat("es-CO", {
   style: "currency",
@@ -17,14 +22,26 @@ const currency = new Intl.NumberFormat("es-CO", {
 });
 
 export default function ProductDetail({
-  product,
-  owner,
+  id,
+  initialProduct,
 }: {
-  product: Product;
-  owner: User | undefined;
+  id: string;
+  initialProduct?: Product;
 }) {
   const [toast, setToast] = useState("");
   const [exchangeOpen, setExchangeOpen] = useState(false);
+  const [activeUserId] = usePersistentState(storageKeys.activeUser, "user-1");
+  const [publishedProducts] = usePersistentState<Product[]>(
+    storageKeys.products,
+    [],
+  );
+  const [, setSavedExchanges] = usePersistentState<Exchange[]>(
+    storageKeys.exchanges,
+    [],
+  );
+  const product =
+    getProducts(publishedProducts).find((item) => item.id === id) ??
+    initialProduct;
 
   useEffect(() => {
     if (!toast) {
@@ -35,19 +52,43 @@ export default function ProductDetail({
   }, [toast]);
 
   function finishExchange(offer: string | null) {
+    if (!product || !offer || activeUserId === product.ownerId) return;
+    const exchange = createExchange(
+      product.id,
+      activeUserId,
+      product.ownerId,
+      offer,
+    );
+    setSavedExchanges((current) => [...getExchanges(current), exchange]);
     setExchangeOpen(false);
-    setToast(
-      offer
-        ? `✦ Tu propuesta con "${offer}" está lista para continuar.`
-        : "✦ Tu propuesta de intercambio está lista para continuar.",
+    setToast("✦ Propuesta guardada. Puedes seguirla en Mis intercambios.");
+  }
+
+  if (!product) {
+    return (
+      <>
+        <Navbar showToast={setToast} />
+        <main className="account-page">
+          <div className="account-empty">
+            <h1>Producto no encontrado</h1>
+            <p>La publicación no existe o ya no está guardada en este navegador.</p>
+            <Link href="/marketplace" className="black-button">
+              Volver al marketplace <b>→</b>
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </>
     );
   }
 
   const category = categories.find((item) => item.id === product.category);
+  const owner = getUsers().find((user) => user.id === product.ownerId);
+  const isOwner = activeUserId === product.ownerId;
 
   return (
     <>
-      <Navbar showToast={setToast} activeSection="marketplace" />
+      <Navbar showToast={setToast} />
       <main className="product-detail-page">
         <div className="product-detail-breadcrumb">
           <Link href="/marketplace">Marketplace</Link>
@@ -64,6 +105,7 @@ export default function ProductDetail({
               fill
               priority
               sizes="(max-width: 800px) 90vw, 50vw"
+              unoptimized={product.imageUrl.startsWith("data:")}
             />
             {product.featured && (
               <span className="tag tag-pink">DESTACADO</span>
@@ -97,8 +139,10 @@ export default function ProductDetail({
               type="button"
               className="black-button product-detail-exchange"
               onClick={() => setExchangeOpen(true)}
+              disabled={isOwner}
             >
-              Proponer intercambio <b>→</b>
+              {isOwner ? "Es tu publicación" : "Proponer intercambio"}{" "}
+              {!isOwner && <b>→</b>}
             </button>
             <Link href="/marketplace" className="product-detail-back">
               ← Volver al marketplace

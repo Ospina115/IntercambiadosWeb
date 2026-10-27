@@ -35,6 +35,7 @@ export default function ProductCard({
             alt={product.imageAlt}
             fill
             sizes="(max-width: 600px) 90vw, (max-width: 900px) 45vw, 30vw"
+            unoptimized={product.imageUrl.startsWith("data:")}
           />
         </Link>
         <button

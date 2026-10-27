@@ -89,6 +89,7 @@ export default function ExchangeModal({
           <button
             type="button"
             className="black-button full-button"
+            disabled={!selectedOffer}
             onClick={() => {
               onFinish(selectedOffer);
               setSelectedOffer(null);

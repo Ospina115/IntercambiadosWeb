@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { categories } from "@/data/categories";
-import { favoriteProductIds } from "@/data/favorites";
+import { storageKeys } from "@/lib/storageKeys";
+import { usePersistentState } from "@/hooks/usePersistentState";
+import { getInitialFavoriteProductIds } from "@/services/favorites";
 import { getProducts } from "@/services/products";
 import type { CategoryFilter } from "@/types/category";
 import type { Product } from "@/types/product";
@@ -32,12 +34,21 @@ export default function Marketplace({
   const [search, setSearch] = useState("");
   const [localCategory, setLocalCategory] =
     useState<CategoryFilter>(category);
-  const [favoriteIds, setFavoriteIds] = useState(favoriteProductIds);
+  const [favoriteIds, setFavoriteIds] = usePersistentState(
+    storageKeys.favorites,
+    getInitialFavoriteProductIds(),
+  );
+  const [publishedProducts] = usePersistentState<Product[]>(
+    storageKeys.products,
+    [],
+  );
   const selectedCategory = onCategoryChange ? category : localCategory;
-  const products = items ?? getProducts();
 
   const visibleProducts = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("es");
+    const products = items
+      ? [...items, ...publishedProducts.filter((product) => product.featured)]
+      : getProducts(publishedProducts);
 
     return products.filter((product) => {
       const matchesCategory =
@@ -48,7 +59,7 @@ export default function Marketplace({
         );
       return matchesCategory && searchableText.includes(query);
     });
-  }, [products, search, selectedCategory]);
+  }, [items, publishedProducts, search, selectedCategory]);
 
   function changeCategory(nextCategory: CategoryFilter) {
     setLocalCategory(nextCategory);

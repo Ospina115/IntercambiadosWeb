@@ -11,12 +11,22 @@ import Marketplace from "@/components/Marketplace";
 import MovingBanner from "@/components/MovingBanner";
 import Navbar from "@/components/Navbar";
 import SwapSection from "@/components/SwapSection";
-import { getFeaturedProducts } from "@/services/products";
+import { getFeaturedProducts, getProducts } from "@/services/products";
+import { createExchange, getExchanges } from "@/services/exchanges";
 import type { CategoryFilter } from "@/types/category";
+import type { Product } from "@/types/product";
+import type { Exchange } from "@/types/exchange";
+import { usePersistentState } from "@/hooks/usePersistentState";
+import { storageKeys } from "@/lib/storageKeys";
 
 export default function IntercambiadosPage() {
   const [category, setCategory] = useState<CategoryFilter>("all");
-  const [exchangeProduct, setExchangeProduct] = useState<string | null>(null);
+  const [exchangeProduct, setExchangeProduct] = useState<Product | null>(null);
+  const [activeUserId] = usePersistentState(storageKeys.activeUser, "user-1");
+  const [, setSavedExchanges] = usePersistentState<Exchange[]>(
+    storageKeys.exchanges,
+    [],
+  );
   const [toast, setToast] = useState("");
 
   useEffect(() => {
@@ -32,13 +42,27 @@ export default function IntercambiadosPage() {
     document.getElementById("explorar")?.scrollIntoView({ behavior: "smooth" });
   }
 
+  function openExchange(product: Product) {
+    if (product.ownerId === activeUserId) {
+      setToast("No puedes proponer un intercambio por tu propio producto.");
+      return;
+    }
+    setExchangeProduct(product);
+  }
+
   function finishExchange(offer: string | null) {
-    setExchangeProduct(null);
-    setToast(
-      offer
-        ? `✦ Tu propuesta con "${offer}" está lista para continuar.`
-        : "✦ Tu propuesta de intercambio está lista para continuar.",
+    if (!exchangeProduct || !offer) {
+      return;
+    }
+    const exchange = createExchange(
+      exchangeProduct.id,
+      activeUserId,
+      exchangeProduct.ownerId,
+      offer,
     );
+    setSavedExchanges((current) => [...getExchanges(current), exchange]);
+    setExchangeProduct(null);
+    setToast("✦ Propuesta guardada. Puedes seguirla en Mis intercambios.");
   }
 
   return (
@@ -52,16 +76,30 @@ export default function IntercambiadosPage() {
           items={getFeaturedProducts()}
           category={category}
           onCategoryChange={setCategory}
-          onExchange={(product) => setExchangeProduct(product.title)}
+          onExchange={openExchange}
           showToast={setToast}
         />
-        <Concept onExchange={setExchangeProduct} />
-        <SwapSection onExchange={setExchangeProduct} />
+        <Concept
+          onExchange={() => {
+            const availableProduct = getProducts().find(
+              (product) => product.ownerId !== activeUserId,
+            );
+            if (availableProduct) openExchange(availableProduct);
+          }}
+        />
+        <SwapSection
+          onExchange={() => {
+            const availableProduct = getProducts().find(
+              (product) => product.ownerId !== activeUserId,
+            );
+            if (availableProduct) openExchange(availableProduct);
+          }}
+        />
         <Brands showToast={setToast} />
         <Footer />
       </main>
       <ExchangeModal
-        product={exchangeProduct}
+        product={exchangeProduct?.title ?? null}
         onClose={() => setExchangeProduct(null)}
         onFinish={finishExchange}
       />

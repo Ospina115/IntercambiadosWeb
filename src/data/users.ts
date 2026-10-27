@@ -3,7 +3,7 @@ import type { User } from "@/types/user";
 export const users: User[] = [
   {
     id: "user-1",
-    name: "Valentina Rojas",
+    name: "Ana Martínez",
     avatar: "/products/look-casual.jpg",
     city: "Bogotá",
   },
@@ -15,13 +15,13 @@ export const users: User[] = [
   },
   {
     id: "user-3",
-    name: "Isabella Gómez",
+    name: "Juan Rodríguez",
     avatar: "/products/bolso-beige.jpg",
     city: "Cali",
   },
   {
     id: "user-4",
-    name: "Mariana Díaz",
+    name: "Samuel Castro",
     avatar: "/products/gafas-vintage.jpg",
     city: "Bogotá",
   },

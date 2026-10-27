@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import ProductDetail from "@/components/ProductDetail";
 import { getProductById } from "@/services/products";
-import { getUserById } from "@/services/users";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
@@ -15,7 +13,10 @@ export async function generateMetadata({
   const product = getProductById(id);
 
   if (!product) {
-    return { title: "Producto no encontrado | INTERCAMBIADOS" };
+    return {
+      title: "Producto | INTERCAMBIADOS",
+      description: "Prenda disponible para intercambio en INTERCAMBIADOS.",
+    };
   }
 
   return {
@@ -28,14 +29,5 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
   const product = getProductById(id);
 
-  if (!product) {
-    notFound();
-  }
-
-  return (
-    <ProductDetail
-      product={product}
-      owner={getUserById(product.ownerId)}
-    />
-  );
+  return <ProductDetail id={id} initialProduct={product} />;
 }
