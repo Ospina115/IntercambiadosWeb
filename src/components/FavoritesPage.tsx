@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import ExchangeModal from "@/components/ExchangeModal";
 import Footer from "@/components/Footer";
@@ -8,11 +8,12 @@ import Navbar from "@/components/Navbar";
 import ProductGrid from "@/components/ProductGrid";
 import { usePersistentState } from "@/hooks/usePersistentState";
 import { storageKeys } from "@/lib/storageKeys";
-import { getProducts } from "@/services/products";
+import { getAllProducts } from "@/services/products";
 import { getInitialFavoriteProductIds } from "@/services/favorites";
 import { createExchange, getExchanges } from "@/services/exchanges";
 import type { Exchange } from "@/types/exchange";
 import type { Product } from "@/types/product";
+import { useToast } from "@/context/NotificationContext";
 
 export default function FavoritesPage() {
   const [favoriteIds, setFavoriteIds] = usePersistentState(
@@ -29,20 +30,14 @@ export default function FavoritesPage() {
     [],
   );
   const [exchangeProduct, setExchangeProduct] = useState<Product | null>(null);
-  const [toast, setToast] = useState("");
-  const products = getProducts(publishedProducts).filter((product) =>
+  const { notify } = useToast();
+  const products = getAllProducts(publishedProducts).filter((product) =>
     favoriteIds.includes(product.id),
   );
 
-  useEffect(() => {
-    if (!toast) return;
-    const timeout = window.setTimeout(() => setToast(""), 3200);
-    return () => window.clearTimeout(timeout);
-  }, [toast]);
-
   return (
     <>
-      <Navbar showToast={setToast} />
+      <Navbar />
       <main className="account-page">
         <div className="account-page-heading">
           <span>GUARDADOS</span>
@@ -60,7 +55,7 @@ export default function FavoritesPage() {
             }
             onExchange={(product) => {
               if (product.ownerId === activeUserId) {
-                setToast("No puedes proponer un intercambio por tu propio producto.");
+                notify("No puedes proponer un intercambio por tu propio producto.");
                 return;
               }
               setExchangeProduct(product);
@@ -89,12 +84,9 @@ export default function FavoritesPage() {
           );
           setSavedExchanges((current) => [...getExchanges(current), exchange]);
           setExchangeProduct(null);
-          setToast("✦ Propuesta guardada. Puedes seguirla en Mis intercambios.");
+          notify("✦ Propuesta guardada. Puedes seguirla en Mis intercambios.");
         }}
       />
-      <div className={`toast${toast ? " show" : ""}`} role="status" aria-live="polite">
-        {toast}
-      </div>
     </>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Brands from "@/components/Brands";
 import CategoryGrid from "@/components/CategoryGrid";
 import Concept from "@/components/Concept";
@@ -11,13 +11,17 @@ import Marketplace from "@/components/Marketplace";
 import MovingBanner from "@/components/MovingBanner";
 import Navbar from "@/components/Navbar";
 import SwapSection from "@/components/SwapSection";
-import { getFeaturedProducts, getProducts } from "@/services/products";
+import {
+  getAllProducts,
+  getFeaturedProducts,
+} from "@/services/products";
 import { createExchange, getExchanges } from "@/services/exchanges";
 import type { CategoryFilter } from "@/types/category";
 import type { Product } from "@/types/product";
 import type { Exchange } from "@/types/exchange";
 import { usePersistentState } from "@/hooks/usePersistentState";
 import { storageKeys } from "@/lib/storageKeys";
+import { useToast } from "@/context/NotificationContext";
 
 export default function IntercambiadosPage() {
   const [category, setCategory] = useState<CategoryFilter>("all");
@@ -27,15 +31,7 @@ export default function IntercambiadosPage() {
     storageKeys.exchanges,
     [],
   );
-  const [toast, setToast] = useState("");
-
-  useEffect(() => {
-    if (!toast) {
-      return;
-    }
-    const timeout = window.setTimeout(() => setToast(""), 3200);
-    return () => window.clearTimeout(timeout);
-  }, [toast]);
+  const { notify } = useToast();
 
   function selectCategory(nextCategory: CategoryFilter) {
     setCategory(nextCategory);
@@ -44,7 +40,7 @@ export default function IntercambiadosPage() {
 
   function openExchange(product: Product) {
     if (product.ownerId === activeUserId) {
-      setToast("No puedes proponer un intercambio por tu propio producto.");
+      notify("No puedes proponer un intercambio por tu propio producto.");
       return;
     }
     setExchangeProduct(product);
@@ -62,14 +58,14 @@ export default function IntercambiadosPage() {
     );
     setSavedExchanges((current) => [...getExchanges(current), exchange]);
     setExchangeProduct(null);
-    setToast("✦ Propuesta guardada. Puedes seguirla en Mis intercambios.");
+    notify("✦ Propuesta guardada. Puedes seguirla en Mis intercambios.");
   }
 
   return (
     <>
-      <Navbar showToast={setToast} />
+      <Navbar />
       <main>
-        <Hero showToast={setToast} />
+        <Hero />
         <MovingBanner />
         <CategoryGrid onSelect={selectCategory} />
         <Marketplace
@@ -77,11 +73,11 @@ export default function IntercambiadosPage() {
           category={category}
           onCategoryChange={setCategory}
           onExchange={openExchange}
-          showToast={setToast}
+          showToast={notify}
         />
         <Concept
           onExchange={() => {
-            const availableProduct = getProducts().find(
+            const availableProduct = getAllProducts().find(
               (product) => product.ownerId !== activeUserId,
             );
             if (availableProduct) openExchange(availableProduct);
@@ -89,13 +85,13 @@ export default function IntercambiadosPage() {
         />
         <SwapSection
           onExchange={() => {
-            const availableProduct = getProducts().find(
+            const availableProduct = getAllProducts().find(
               (product) => product.ownerId !== activeUserId,
             );
             if (availableProduct) openExchange(availableProduct);
           }}
         />
-        <Brands showToast={setToast} />
+        <Brands showToast={notify} />
         <Footer />
       </main>
       <ExchangeModal
@@ -103,9 +99,6 @@ export default function IntercambiadosPage() {
         onClose={() => setExchangeProduct(null)}
         onFinish={finishExchange}
       />
-      <div className={`toast${toast ? " show" : ""}`} role="status" aria-live="polite">
-        {toast}
-      </div>
     </>
   );
 }

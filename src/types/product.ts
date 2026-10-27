@@ -23,4 +23,5 @@ export interface Product {
   imageAlt: string;
   featured?: boolean;
   ownerId: string;
+  createdAt?: string;
 }

@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { usePersistentState } from "@/hooks/usePersistentState";
 import { storageKeys } from "@/lib/storageKeys";
 import { getExchanges } from "@/services/exchanges";
 import { getInitialFavoriteProductIds } from "@/services/favorites";
-import { getProducts } from "@/services/products";
+import { getAllProducts } from "@/services/products";
 import { getUsers } from "@/services/users";
 import type { Exchange } from "@/types/exchange";
 import type { Product } from "@/types/product";
@@ -25,23 +24,16 @@ export default function DashboardPage() {
     storageKeys.favorites,
     getInitialFavoriteProductIds(),
   );
-  const [toast, setToast] = useState("");
   const metrics = [
-    { label: "Productos", value: getProducts(publishedProducts).length },
+    { label: "Productos", value: getAllProducts(publishedProducts).length },
     { label: "Usuarios", value: getUsers().length },
     { label: "Intercambios", value: getExchanges(savedExchanges).length },
     { label: "Favoritos", value: favoriteIds.length },
   ];
 
-  useEffect(() => {
-    if (!toast) return;
-    const timeout = window.setTimeout(() => setToast(""), 3200);
-    return () => window.clearTimeout(timeout);
-  }, [toast]);
-
   return (
     <>
-      <Navbar showToast={setToast} />
+      <Navbar />
       <main className="account-page">
         <div className="account-page-heading">
           <span>RESUMEN DE DATOS LOCALES</span>
@@ -58,9 +50,6 @@ export default function DashboardPage() {
         </div>
       </main>
       <Footer />
-      <div className={`toast${toast ? " show" : ""}`} role="status" aria-live="polite">
-        {toast}
-      </div>
     </>
   );
 }

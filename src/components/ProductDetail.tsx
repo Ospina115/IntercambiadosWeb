@@ -2,18 +2,19 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { categories } from "@/data/categories";
 import ExchangeModal from "@/components/ExchangeModal";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { getUsers } from "@/services/users";
-import { getProducts } from "@/services/products";
+import { getAllProducts } from "@/services/products";
 import { createExchange, getExchanges } from "@/services/exchanges";
 import { usePersistentState } from "@/hooks/usePersistentState";
 import { storageKeys } from "@/lib/storageKeys";
 import type { Exchange } from "@/types/exchange";
 import type { Product } from "@/types/product";
+import { useToast } from "@/context/NotificationContext";
 
 const currency = new Intl.NumberFormat("es-CO", {
   style: "currency",
@@ -28,7 +29,7 @@ export default function ProductDetail({
   id: string;
   initialProduct?: Product;
 }) {
-  const [toast, setToast] = useState("");
+  const { notify } = useToast();
   const [exchangeOpen, setExchangeOpen] = useState(false);
   const [activeUserId] = usePersistentState(storageKeys.activeUser, "user-1");
   const [publishedProducts] = usePersistentState<Product[]>(
@@ -40,16 +41,8 @@ export default function ProductDetail({
     [],
   );
   const product =
-    getProducts(publishedProducts).find((item) => item.id === id) ??
+    getAllProducts(publishedProducts).find((item) => item.id === id) ??
     initialProduct;
-
-  useEffect(() => {
-    if (!toast) {
-      return;
-    }
-    const timeout = window.setTimeout(() => setToast(""), 3200);
-    return () => window.clearTimeout(timeout);
-  }, [toast]);
 
   function finishExchange(offer: string | null) {
     if (!product || !offer || activeUserId === product.ownerId) return;
@@ -61,13 +54,13 @@ export default function ProductDetail({
     );
     setSavedExchanges((current) => [...getExchanges(current), exchange]);
     setExchangeOpen(false);
-    setToast("✦ Propuesta guardada. Puedes seguirla en Mis intercambios.");
+    notify("✦ Propuesta guardada. Puedes seguirla en Mis intercambios.");
   }
 
   if (!product) {
     return (
       <>
-        <Navbar showToast={setToast} />
+        <Navbar />
         <main className="account-page">
           <div className="account-empty">
             <h1>Producto no encontrado</h1>
@@ -88,7 +81,7 @@ export default function ProductDetail({
 
   return (
     <>
-      <Navbar showToast={setToast} />
+      <Navbar />
       <main className="product-detail-page">
         <div className="product-detail-breadcrumb">
           <Link href="/marketplace">Marketplace</Link>
@@ -156,9 +149,6 @@ export default function ProductDetail({
         onClose={() => setExchangeOpen(false)}
         onFinish={finishExchange}
       />
-      <div className={`toast${toast ? " show" : ""}`} role="status" aria-live="polite">
-        {toast}
-      </div>
     </>
   );
 }

@@ -1,11 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export default function Hero({
-  showToast,
-}: {
-  showToast: (message: string) => void;
-}) {
+export default function Hero() {
   return (
     <section className="hero" id="inicio">
       <div className="hero-left">
@@ -24,15 +20,9 @@ export default function Hero({
           <Link href="/marketplace" className="black-button">
             Explorar prendas <b>→</b>
           </Link>
-          <button
-            type="button"
-            className="pink-button"
-            onClick={() =>
-              showToast("✦ Pronto podrás publicar tus prendas y accesorios.")
-            }
-          >
+          <Link href="/publicar" className="pink-button">
             + Publicar algo
-          </button>
+          </Link>
         </div>
         <div className="hero-numbers">
           <div>

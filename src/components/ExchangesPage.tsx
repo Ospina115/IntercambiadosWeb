@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { usePersistentState } from "@/hooks/usePersistentState";
 import { storageKeys } from "@/lib/storageKeys";
 import { getExchanges, updateExchangeStatus } from "@/services/exchanges";
-import { getProducts } from "@/services/products";
+import { getAllProducts } from "@/services/products";
 import { getUsers } from "@/services/users";
 import type { Exchange, ExchangeStatus } from "@/types/exchange";
 import type { Product } from "@/types/product";
+import { useToast } from "@/context/NotificationContext";
 
 const statusLabels: Record<ExchangeStatus, string> = {
   pending: "Pendiente",
@@ -28,32 +28,26 @@ export default function ExchangesPage() {
     storageKeys.products,
     [],
   );
-  const [toast, setToast] = useState("");
+  const { notify } = useToast();
   const allExchanges = getExchanges(savedExchanges);
   const userExchanges = allExchanges.filter(
     (exchange) =>
       exchange.senderId === activeUserId ||
       exchange.receiverId === activeUserId,
   );
-  const products = getProducts(publishedProducts);
+  const products = getAllProducts(publishedProducts);
   const users = getUsers();
-
-  useEffect(() => {
-    if (!toast) return;
-    const timeout = window.setTimeout(() => setToast(""), 3200);
-    return () => window.clearTimeout(timeout);
-  }, [toast]);
 
   function updateStatus(exchangeId: string, status: ExchangeStatus) {
     setSavedExchanges((current) =>
       updateExchangeStatus(current, exchangeId, status),
     );
-    setToast(`Intercambio ${statusLabels[status].toLocaleLowerCase("es")}.`);
+    notify(`Intercambio ${statusLabels[status].toLocaleLowerCase("es")}.`);
   }
 
   return (
     <>
-      <Navbar showToast={setToast} />
+      <Navbar />
       <main className="account-page">
         <div className="account-page-heading">
           <span>PROPUESTAS</span>
@@ -134,9 +128,6 @@ export default function ExchangesPage() {
         )}
       </main>
       <Footer />
-      <div className={`toast${toast ? " show" : ""}`} role="status" aria-live="polite">
-        {toast}
-      </div>
     </>
   );
 }

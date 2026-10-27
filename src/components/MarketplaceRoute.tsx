@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ExchangeModal from "@/components/ExchangeModal";
 import Footer from "@/components/Footer";
 import Marketplace from "@/components/Marketplace";
@@ -10,6 +10,7 @@ import { usePersistentState } from "@/hooks/usePersistentState";
 import { storageKeys } from "@/lib/storageKeys";
 import type { Exchange } from "@/types/exchange";
 import type { Product } from "@/types/product";
+import { useToast } from "@/context/NotificationContext";
 
 export default function MarketplaceRoute() {
   const [exchangeProduct, setExchangeProduct] = useState<Product | null>(null);
@@ -18,15 +19,7 @@ export default function MarketplaceRoute() {
     storageKeys.exchanges,
     [],
   );
-  const [toast, setToast] = useState("");
-
-  useEffect(() => {
-    if (!toast) {
-      return;
-    }
-    const timeout = window.setTimeout(() => setToast(""), 3200);
-    return () => window.clearTimeout(timeout);
-  }, [toast]);
+  const { notify } = useToast();
 
   function finishExchange(offer: string | null) {
     if (!exchangeProduct || !offer) return;
@@ -38,12 +31,12 @@ export default function MarketplaceRoute() {
     );
     setSavedExchanges((current) => [...getExchanges(current), exchange]);
     setExchangeProduct(null);
-    setToast("✦ Propuesta guardada. Puedes seguirla en Mis intercambios.");
+    notify("✦ Propuesta guardada. Puedes seguirla en Mis intercambios.");
   }
 
   function openExchange(product: Product) {
     if (product.ownerId === activeUserId) {
-      setToast("No puedes proponer un intercambio por tu propio producto.");
+      notify("No puedes proponer un intercambio por tu propio producto.");
       return;
     }
     setExchangeProduct(product);
@@ -51,12 +44,12 @@ export default function MarketplaceRoute() {
 
   return (
     <>
-      <Navbar showToast={setToast} />
+      <Navbar />
       <main>
         <Marketplace
           showHeader={false}
           onExchange={openExchange}
-          showToast={setToast}
+          showToast={notify}
         />
       </main>
       <Footer />
@@ -65,9 +58,6 @@ export default function MarketplaceRoute() {
         onClose={() => setExchangeProduct(null)}
         onFinish={finishExchange}
       />
-      <div className={`toast${toast ? " show" : ""}`} role="status" aria-live="polite">
-        {toast}
-      </div>
     </>
   );
 }

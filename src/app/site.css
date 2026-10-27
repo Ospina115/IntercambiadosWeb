@@ -166,8 +166,11 @@ a {
 }
 
 .nav-actions .profile-button {
+  position: relative;
+  display: block;
   width: 32px;
   height: 32px;
+  overflow: hidden;
   border: 1px solid #ddd6ce;
   border-radius: 50%;
   font-size: 13px;
@@ -635,6 +638,71 @@ a {
   background: #171717;
   color: white;
   border-color: #171717;
+}
+
+.marketplace-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 12px;
+  margin: -7px 0 15px;
+}
+
+.marketplace-controls label {
+  display: grid;
+  gap: 7px;
+  color: #777;
+  font-size: 10px;
+}
+
+.marketplace-controls input,
+.marketplace-controls select {
+  min-width: 0;
+  width: 100%;
+  height: 39px;
+  padding: 0 11px;
+  border: 1px solid #ddd6ce;
+  border-radius: 10px;
+  background: white;
+  color: #171717;
+  font: inherit;
+}
+
+.product-result-count {
+  margin: 20px 0 13px;
+  color: #777;
+  font-size: 11px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 35px;
+}
+
+.pagination button {
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid #ddd6ce;
+  border-radius: 22px;
+  background: white;
+  color: #171717;
+  font-size: 11px;
+}
+
+.pagination button.active,
+.pagination button:not(:disabled):hover {
+  border-color: #171717;
+  background: #171717;
+  color: white;
+}
+
+.pagination button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
 }
 
 .product-grid {
@@ -1177,6 +1245,71 @@ footer p {
   margin-top: 15px;
   color: #777;
   font-size: 14px;
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  max-width: 680px;
+  padding: 30px;
+  border: 1px solid #eee8e0;
+  border-radius: 22px;
+  background: white;
+}
+
+.profile-avatar {
+  position: relative;
+  width: 144px;
+  height: 144px;
+  flex: 0 0 144px;
+  overflow: hidden;
+  border: 1px solid #eee8e0;
+  border-radius: 50%;
+  background: #f5f0e9;
+}
+
+.profile-avatar img {
+  object-fit: cover;
+}
+
+.profile-details {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+
+.profile-details h2 {
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.profile-details > p:not(.form-error) {
+  color: #777;
+  font-size: 13px;
+}
+
+.profile-upload {
+  position: relative;
+  overflow: hidden;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+.profile-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.profile-reset {
+  border: 0;
+  background: transparent;
+  color: #777;
+  font-size: 11px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .account-empty {
@@ -1862,6 +1995,12 @@ footer p {
 
   .dashboard-metric strong {
     font-size: 34px;
+  }
+
+  .profile-card {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 22px;
   }
 
   .marketplace-route {

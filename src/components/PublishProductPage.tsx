@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
@@ -11,6 +11,7 @@ import { usePersistentState } from "@/hooks/usePersistentState";
 import { compressImage } from "@/lib/image";
 import { storageKeys } from "@/lib/storageKeys";
 import { productCategories, type Product, type ProductCondition } from "@/types/product";
+import { useToast } from "@/context/NotificationContext";
 
 const conditions: ProductCondition[] = [
   "Como nuevo",
@@ -37,14 +38,8 @@ export default function PublishProductPage() {
   const [imageName, setImageName] = useState("");
   const [error, setError] = useState("");
   const [isProcessingImage, setIsProcessingImage] = useState(false);
-  const [toast, setToast] = useState("");
+  const { notify } = useToast();
   const user = getUsers().find((item) => item.id === activeUserId);
-
-  useEffect(() => {
-    if (!toast) return;
-    const timeout = window.setTimeout(() => setToast(""), 3200);
-    return () => window.clearTimeout(timeout);
-  }, [toast]);
 
   async function handleImageChange(file: File | undefined) {
     if (!file) return;
@@ -102,13 +97,13 @@ export default function PublishProductPage() {
       return;
     }
 
-    setToast("Producto publicado correctamente.");
+    notify("Producto publicado correctamente.");
     router.push("/mis-productos");
   }
 
   return (
     <>
-      <Navbar showToast={setToast} />
+      <Navbar />
       <main className="account-page publish-page">
         <div className="account-page-heading">
           <span>DALE OTRA OPORTUNIDAD</span>
@@ -213,9 +208,6 @@ export default function PublishProductPage() {
         </form>
       </main>
       <Footer />
-      <div className={`toast${toast ? " show" : ""}`} role="status" aria-live="polite">
-        {toast}
-      </div>
     </>
   );
 }

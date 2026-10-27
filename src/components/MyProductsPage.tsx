@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import ProductGrid from "@/components/ProductGrid";
@@ -10,6 +9,7 @@ import { storageKeys } from "@/lib/storageKeys";
 import { getInitialFavoriteProductIds } from "@/services/favorites";
 import { getUsers } from "@/services/users";
 import type { Product } from "@/types/product";
+import { useToast } from "@/context/NotificationContext";
 
 export default function MyProductsPage() {
   const [activeUserId] = usePersistentState(storageKeys.activeUser, "user-1");
@@ -21,21 +21,15 @@ export default function MyProductsPage() {
     storageKeys.favorites,
     getInitialFavoriteProductIds(),
   );
-  const [toast, setToast] = useState("");
+  const { notify } = useToast();
   const user = getUsers().find((item) => item.id === activeUserId);
   const products = publishedProducts.filter(
     (product) => product.ownerId === activeUserId,
   );
 
-  useEffect(() => {
-    if (!toast) return;
-    const timeout = window.setTimeout(() => setToast(""), 3200);
-    return () => window.clearTimeout(timeout);
-  }, [toast]);
-
   return (
     <>
-      <Navbar showToast={setToast} />
+      <Navbar />
       <main className="account-page">
         <div className="account-page-heading">
           <span>MI ESPACIO</span>
@@ -54,7 +48,7 @@ export default function MyProductsPage() {
               )
             }
             onExchange={(product) =>
-              setToast(`No puedes proponer un intercambio por "${product.title}".`)
+              notify(`No puedes proponer un intercambio por "${product.title}".`)
             }
           />
         ) : (
@@ -67,9 +61,6 @@ export default function MyProductsPage() {
         )}
       </main>
       <Footer />
-      <div className={`toast${toast ? " show" : ""}`} role="status" aria-live="polite">
-        {toast}
-      </div>
     </>
   );
 }

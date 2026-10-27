@@ -1,20 +1,14 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { getUsers } from "@/services/users";
-import { storageKeys } from "@/lib/storageKeys";
-import { usePersistentState } from "@/hooks/usePersistentState";
+import { useSession } from "@/context/SessionContext";
+import { useToast } from "@/context/NotificationContext";
 
-export default function Navbar({
-  showToast,
-}: {
-  showToast: (message: string) => void;
-}) {
-  const [activeUserId, setActiveUserId] = usePersistentState(
-    storageKeys.activeUser,
-    "user-1",
-  );
-  const activeUser = getUsers().find((user) => user.id === activeUserId);
+export default function Navbar() {
+  const { currentUser, setCurrentUser, getProfileImage } = useSession();
+  const { notify } = useToast();
 
   return (
     <header className="navbar">
@@ -42,16 +36,16 @@ export default function Navbar({
         <label className="active-user-select">
           <span>Usuario</span>
           <select
-            value={activeUserId}
+            value={currentUser.id}
             onChange={(event) => {
               const nextUserId = event.target.value;
-              setActiveUserId(nextUserId);
               const nextUser = getUsers().find((user) => user.id === nextUserId);
               if (nextUser) {
-                showToast(`Sesión de prueba: ${nextUser.name}`);
+                setCurrentUser(nextUser);
+                notify(`Sesión de prueba: ${nextUser.name}`);
               }
             }}
-            aria-label={`Usuario activo: ${activeUser?.name ?? "seleccionar"}`}
+            aria-label={`Usuario activo: ${currentUser.name}`}
           >
             {getUsers().map((user) => (
               <option value={user.id} key={user.id}>
@@ -60,16 +54,20 @@ export default function Navbar({
             ))}
           </select>
         </label>
-        <button
-          type="button"
+        <Link
+          href="/perfil"
           className="profile-button"
-          aria-label="Ver perfil"
-          onClick={() =>
-            showToast("✦ Tu perfil estará disponible próximamente")
-          }
+          aria-label={`Perfil de ${currentUser.name}`}
+          title={`Perfil de ${currentUser.name}`}
         >
-          ◯
-        </button>
+          <Image
+            src={getProfileImage()}
+            alt=""
+            fill
+            sizes="36px"
+            unoptimized={getProfileImage().startsWith("data:")}
+          />
+        </Link>
       </div>
     </header>
   );
